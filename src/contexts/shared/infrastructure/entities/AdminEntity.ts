@@ -1,4 +1,4 @@
-import { BackofficeAdminRoles } from 'src/contexts/backoffice/admins/domain/BackofficeAdminRole';
+import { BackofficeAdminRoles } from 'src/contexts/backoffice/admin/domain/BackofficeAdminRole';
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity({
