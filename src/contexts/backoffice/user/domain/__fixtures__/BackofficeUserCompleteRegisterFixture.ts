@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { BackofficeUserCompleteRegister } from '../BackofficeUserCompleteRegister';
 
 export class BackofficeUserCompleteRegisterFixture {
@@ -7,6 +7,6 @@ export class BackofficeUserCompleteRegisterFixture {
   }
 
   static random(): BackofficeUserCompleteRegister {
-    return this.create(faker.random.boolean());
+    return this.create(faker.datatype.boolean());
   }
 }

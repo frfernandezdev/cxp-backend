@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { BackofficeUserDisplayName } from '../BackofficeUserDisplayName';
 
 export class BackofficeUserDisplayNameFixture {

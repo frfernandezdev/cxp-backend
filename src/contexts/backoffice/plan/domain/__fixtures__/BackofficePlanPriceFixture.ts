@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { BackofficePlanPrice } from '../BackofficePlanPrice';
 
 export class BackofficePlanPriceFixture {
@@ -7,6 +7,6 @@ export class BackofficePlanPriceFixture {
   }
 
   static random(): BackofficePlanPrice {
-    return this.create(faker.random.number());
+    return this.create(faker.datatype.number());
   }
 }

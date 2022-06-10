@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { BackofficeUserPhotoURL } from '../BackofficeUserPhotoURL';
 
 export class BackofficeUserPhotoURLFixture {

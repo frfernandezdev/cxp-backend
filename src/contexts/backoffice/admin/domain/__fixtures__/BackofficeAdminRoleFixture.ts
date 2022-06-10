@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import {
   BackofficeAdminRole,
   BackofficeAdminRoles,
@@ -10,6 +10,6 @@ export class BackofficeAdminRoleFixture {
   }
 
   static random(): BackofficeAdminRole {
-    return this.create(faker.random.number(3));
+    return this.create(faker.datatype.number({ max: 3 }));
   }
 }

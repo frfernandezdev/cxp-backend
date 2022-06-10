@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { BackofficeUserSessionTaken } from '../BackofficeUserSessionTaken';
 
 export class BackofficeUserSessionTakenFixture {
@@ -7,6 +7,6 @@ export class BackofficeUserSessionTakenFixture {
   }
 
   static random(): BackofficeUserSessionTaken {
-    return this.create(faker.random.number());
+    return this.create(faker.datatype.number());
   }
 }

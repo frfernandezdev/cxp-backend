@@ -1,4 +1,4 @@
-import { v4 } from 'uuid';
+import { faker } from '@faker-js/faker';
 import { BackofficePlanId } from '../BackofficePlanId';
 
 export class BackofficePlanIdFixture {
@@ -7,6 +7,6 @@ export class BackofficePlanIdFixture {
   }
 
   static random(): BackofficePlanId {
-    return this.create(v4());
+    return this.create(faker.datatype.uuid());
   }
 }

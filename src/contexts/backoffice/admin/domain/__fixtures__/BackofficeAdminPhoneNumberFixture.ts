@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { BackofficeAdminPhoneNumber } from '../BackofficeAdminPhoneNumber';
 
 export class BackofficeAdminPhoneNumberFixture {

@@ -1,4 +1,4 @@
-import * as faker from 'faker';
+import { faker } from '@faker-js/faker';
 import { BackofficeSpecialityName } from '../BackofficeSpecialityName';
 
 export class BackofficeSpecialityNameFixture {
