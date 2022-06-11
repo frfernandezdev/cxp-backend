@@ -10,8 +10,10 @@ export class BackofficeSearchAllMethodQueryHandler
   constructor(private readonly finder: BackofficeMethodFinder) {}
 
   async execute(
-    command: BackofficeSearchAllMethodQuery,
+    query: BackofficeSearchAllMethodQuery,
   ): Promise<BackofficeMethodResponse> {
-    return this.finder.run();
+    const { offset, limit } = query;
+
+    return this.finder.run(offset, limit);
   }
 }

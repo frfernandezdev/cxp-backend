@@ -6,7 +6,7 @@ import { BackofficeSQLiteMethodRepository } from '../../infrasctructure/persiste
 import { BackofficeMethodResponse } from '../BackofficeMethodResponse';
 
 @Injectable()
-export class BackofficeMethodsByCriteriaSearcher {
+export class BackofficeMethodByCriteriaSearcher {
   constructor(private readonly repository: BackofficeSQLiteMethodRepository) {}
 
   async run(

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { MethodEntity } from 'src/contexts/shared/infrastructure/entities/MethodEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeMethod } from '../../../domain/BackofficeMethod';
 import { BackofficeMethodId } from '../../../domain/BackofficeMethodId';
 import { BackofficeMethodIdFixture } from '../../../domain/__fixtures__/BackofficeMethodIdFixture';
@@ -20,7 +20,7 @@ const backofficeMethodMock = () =>
   );
 
 describe('BackofficeMethodDisabler', () => {
-  let database: Connection;
+  let database: DataSource;
   let enabler: BackofficeMethodEnabler;
 
   beforeEach(async () => {
@@ -29,7 +29,7 @@ describe('BackofficeMethodDisabler', () => {
       providers: [BackofficeSQLiteMethodRepository, BackofficeMethodEnabler],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     enabler = moduleRef.get<BackofficeMethodEnabler>(BackofficeMethodEnabler);
   });
 
@@ -55,7 +55,9 @@ describe('BackofficeMethodDisabler', () => {
       await enabler.run([new BackofficeMethodId(id)]);
 
       const result = await database.manager.findOne(MethodEntity, {
-        id: method.id,
+        where: {
+          id: method.id,
+        },
       });
 
       expect(result).not.toBeUndefined();

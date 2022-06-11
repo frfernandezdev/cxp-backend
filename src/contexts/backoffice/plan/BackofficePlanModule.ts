@@ -22,4 +22,4 @@ import { BackofficeSQLitePlanRepository } from './infrastructure/persistence/Bac
     UpdateBackofficePlanCommandHandler,
   ],
 })
-export class BackOfficePlanModule {}
+export class BackofficePlanModule {}

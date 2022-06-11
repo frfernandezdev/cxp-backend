@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { PlanEntity } from 'src/contexts/shared/infrastructure/entities/PlanEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficePlan } from '../../../domain/BackofficePlan';
 import { BackofficePlanId } from '../../../domain/BackofficePlanId';
 import { BackofficePlanCoinFixture } from '../../../domain/__fixtures__/BackofficePlanCoinFixture';
@@ -24,7 +24,7 @@ const backofficePlanMock = () =>
   );
 
 describe('BackofficePlanDisabler', () => {
-  let database: Connection;
+  let database: DataSource;
   let enabler: BackofficePlanEnabler;
 
   beforeEach(async () => {
@@ -33,12 +33,12 @@ describe('BackofficePlanDisabler', () => {
       providers: [BackofficeSQLitePlanRepository, BackofficePlanEnabler],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     enabler = moduleRef.get<BackofficePlanEnabler>(BackofficePlanEnabler);
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
   describe('#run', () => {
@@ -61,7 +61,9 @@ describe('BackofficePlanDisabler', () => {
       await enabler.run([new BackofficePlanId(id)]);
 
       const result = await database.manager.findOne(PlanEntity, {
-        id: plan.id,
+        where: {
+          id: plan.id,
+        },
       });
 
       expect(result).not.toBeUndefined();

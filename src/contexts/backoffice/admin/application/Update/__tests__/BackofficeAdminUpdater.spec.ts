@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { AdminEntity } from 'src/contexts/shared/infrastructure/entities/AdminEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeAdmin } from '../../../domain/BackofficeAdmin';
 import { BackofficeAdminDisplayName } from '../../../domain/BackofficeAdminDisplayName';
 import { BackofficeAdminEmail } from '../../../domain/BackofficeAdminEmail';
@@ -38,7 +38,7 @@ const backofficeAdminMock = () =>
   );
 
 describe('BackofficeAdminUpdater', () => {
-  let database: Connection;
+  let database: DataSource;
   let updater: BackofficeAdminUpdater;
 
   beforeEach(async () => {
@@ -47,7 +47,7 @@ describe('BackofficeAdminUpdater', () => {
       providers: [BackofficeSQLiteAdminRepository, BackofficeAdminUpdater],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     updater = moduleRef.get<BackofficeAdminUpdater>(BackofficeAdminUpdater);
   });
 
@@ -97,7 +97,9 @@ describe('BackofficeAdminUpdater', () => {
       });
 
       const result = await database.manager.findOne(AdminEntity, {
-        id: admin.id,
+        where: {
+          id: admin.id,
+        },
       });
 
       expect(result).not.toBeUndefined();

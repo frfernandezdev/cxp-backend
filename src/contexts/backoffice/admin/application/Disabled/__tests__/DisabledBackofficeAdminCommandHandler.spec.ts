@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { AdminEntity } from 'src/contexts/shared/infrastructure/entities/AdminEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeAdmin } from '../../../domain/BackofficeAdmin';
 import { BackofficeAdminDisplayNameFixture } from '../../../domain/__fixtures__/BackofficeAdminDisplayNameFixture';
 import { BackofficeAdminEmailFixture } from '../../../domain/__fixtures__/BackofficeAdminEmailFixture';
@@ -33,7 +33,7 @@ const backofficeAdminMock = () =>
   );
 
 describe('DisabledBackofficeAdminCommandHandler', () => {
-  let database: Connection;
+  let database: DataSource;
   let handler: DisabledBackofficeAdminCommandHandler;
 
   beforeEach(async () => {
@@ -46,7 +46,7 @@ describe('DisabledBackofficeAdminCommandHandler', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     handler = moduleRef.get<DisabledBackofficeAdminCommandHandler>(
       DisabledBackofficeAdminCommandHandler,
     );
@@ -84,7 +84,9 @@ describe('DisabledBackofficeAdminCommandHandler', () => {
       const id = admin.id;
       await handler.execute(new DisabledBackofficeAdminCommand(id));
 
-      const result = await database.manager.findOne(AdminEntity, { id });
+      const result = await database.manager.findOne(AdminEntity, {
+        where: { id },
+      });
 
       expect(result).not.toBeUndefined();
       expect(result.disabled).toBeTruthy();

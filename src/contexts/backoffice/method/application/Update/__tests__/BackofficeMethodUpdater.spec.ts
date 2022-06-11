@@ -1,13 +1,14 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { MethodEntity } from 'src/contexts/shared/infrastructure/entities/MethodEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeMethod } from '../../../domain/BackofficeMethod';
 import { BackofficeMethodId } from '../../../domain/BackofficeMethodId';
 import { BackofficeMethodIdFixture } from '../../../domain/__fixtures__/BackofficeMethodIdFixture';
 import { BackofficeMethodNameFixture } from '../../../domain/__fixtures__/BackofficeMethodNameFixture';
 import { BackofficeSQLiteMethodRepository } from '../../../infrasctructure/persistence/BackofficeSQLiteMethodRepository';
 import { BackofficeMethodUpdater } from '../BackofficeMethodUpdater';
+
 jest.mock(
   'src/contexts/backoffice/shared/infrastructure/persistence/BackofficeSQLiteModule',
 );
@@ -19,7 +20,7 @@ const backofficeMethodMock = () =>
   );
 
 describe('BackofficeMethodUpdater', () => {
-  let database: Connection;
+  let database: DataSource;
   let updater: BackofficeMethodUpdater;
 
   beforeEach(async () => {
@@ -28,7 +29,7 @@ describe('BackofficeMethodUpdater', () => {
       providers: [BackofficeSQLiteMethodRepository, BackofficeMethodUpdater],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     updater = moduleRef.get<BackofficeMethodUpdater>(BackofficeMethodUpdater);
   });
 

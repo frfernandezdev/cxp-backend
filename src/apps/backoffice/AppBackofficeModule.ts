@@ -7,7 +7,14 @@ import { AppBackofficeSpecialityModule } from './speciality/AppBackofficeSpecial
 import { AppBackofficeUserModule } from './user/AppBackofficeUserModule';
 
 @Module({
-  imports: [BackofficeModule],
+  imports: [
+    BackofficeModule,
+    AppBackofficeAdminModule,
+    AppBackofficeMethodModule,
+    AppBackofficePlanModule,
+    AppBackofficeSpecialityModule,
+    AppBackofficeUserModule,
+  ],
   exports: [
     AppBackofficeAdminModule,
     AppBackofficeMethodModule,

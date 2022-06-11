@@ -1,5 +1,4 @@
 import { Test } from '@nestjs/testing';
-import { time } from 'console';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/BackofficeSQLiteModule';
 import { Criteria } from 'src/contexts/shared/domain/criteria/Criteria';
 import { Filter } from 'src/contexts/shared/domain/criteria/Filter';
@@ -11,7 +10,7 @@ import {
 import { Filters } from 'src/contexts/shared/domain/criteria/Filters';
 import { FilterValue } from 'src/contexts/shared/domain/criteria/FilterValue';
 import { UserEntity } from 'src/contexts/shared/infrastructure/entities/UserEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeUser } from '../../../domain/BackofficeUser';
 import { BackofficeUserId } from '../../../domain/BackofficeUserId';
 import { BackofficeUserCompleteRegisterFixture } from '../../../domain/__fixtures__/BackofficeUserCompleteRegisterFixture';
@@ -47,7 +46,7 @@ const backofficeUserMock = () =>
   );
 
 describe('BackofficeSQLiteUserRepository', () => {
-  let database: Connection;
+  let database: DataSource;
   let repository: BackofficeSQLiteUserRepository;
 
   beforeEach(async () => {
@@ -56,14 +55,14 @@ describe('BackofficeSQLiteUserRepository', () => {
       providers: [BackofficeSQLiteUserRepository],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     repository = moduleRef.get<BackofficeSQLiteUserRepository>(
       BackofficeSQLiteUserRepository,
     );
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
   describe('#save', () => {
@@ -74,7 +73,9 @@ describe('BackofficeSQLiteUserRepository', () => {
       await repository.save(admin);
 
       const entity = await database.manager.findOne(UserEntity, {
-        id: raw.id,
+        where: {
+          id: raw.id,
+        },
       });
 
       expect(entity).not.toBeUndefined();
@@ -292,7 +293,9 @@ describe('BackofficeSQLiteUserRepository', () => {
       await repository.delete(user.id);
 
       const result = await database.manager.findOne(UserEntity, {
-        id: user.id,
+        where: {
+          id: user.id,
+        },
       });
 
       expect(result).toBeUndefined();

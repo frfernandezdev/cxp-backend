@@ -11,7 +11,7 @@ import { Filters } from 'src/contexts/shared/domain/criteria/Filters';
 import { FilterValue } from 'src/contexts/shared/domain/criteria/FilterValue';
 import { MethodEntity } from 'src/contexts/shared/infrastructure/entities/MethodEntity';
 import { SpecialityEntity } from 'src/contexts/shared/infrastructure/entities/SpecialityEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeSpeciality } from '../../../domain/BackofficeSpeciality';
 import { BackofficeSpecialityId } from '../../../domain/BackofficeSpecialityId';
 import { BackofficeSpecialityIdFixture } from '../../../domain/__fixtures__/BackofficeSpecialityIdFixture';
@@ -29,7 +29,7 @@ const backofficeSpecialityMock = () =>
   );
 
 describe('BackofficeSQLiteSpecialityRepository', () => {
-  let database: Connection;
+  let database: DataSource;
   let repository: BackofficeSQLiteSpecialityRepository;
 
   beforeEach(async () => {
@@ -38,7 +38,7 @@ describe('BackofficeSQLiteSpecialityRepository', () => {
       providers: [BackofficeSQLiteSpecialityRepository],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     repository = moduleRef.get<BackofficeSQLiteSpecialityRepository>(
       BackofficeSQLiteSpecialityRepository,
     );
@@ -56,7 +56,9 @@ describe('BackofficeSQLiteSpecialityRepository', () => {
       await repository.save(speciality);
 
       const entity = await database.manager.findOne(SpecialityEntity, {
-        id: raw.id,
+        where: {
+          id: raw.id,
+        },
       });
 
       expect(entity).not.toBeUndefined();
@@ -165,7 +167,9 @@ describe('BackofficeSQLiteSpecialityRepository', () => {
       await repository.delete(speciality.id);
 
       const result = await database.manager.findOne(SpecialityEntity, {
-        id: speciality.id,
+        where: {
+          id: speciality.id,
+        },
       });
 
       expect(result).toBeUndefined();

@@ -12,6 +12,8 @@ export class BackofficeSearchAllSpecialityQueryHandler
   async execute(
     query: BackofficeSearchAllSpecialityQuery,
   ): Promise<BackofficeSpecialityResponse> {
-    return this.finder.run();
+    const { offset, limit } = query;
+
+    return this.finder.run(offset, limit);
   }
 }

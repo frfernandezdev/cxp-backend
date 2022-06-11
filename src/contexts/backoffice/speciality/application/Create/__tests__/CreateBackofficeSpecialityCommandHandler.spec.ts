@@ -1,8 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
-import { MethodEntity } from 'src/contexts/shared/infrastructure/entities/MethodEntity';
 import { SpecialityEntity } from 'src/contexts/shared/infrastructure/entities/SpecialityEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeSpecialityIdFixture } from '../../../domain/__fixtures__/BackofficeSpecialityIdFixture';
 import { BackofficeSpecialityNameFixture } from '../../../domain/__fixtures__/BackofficeSpecialityNameFixture';
 import { BackofficeSQLiteSpecialityRepository } from '../../../infrastructure/persistence/BackofficeSQLiteSpecialityRepository';
@@ -15,7 +14,7 @@ jest.mock(
 );
 
 describe('CreateBackofficeSpecialityCommandHandler', () => {
-  let database: Connection;
+  let database: DataSource;
   let handler: CreateBackofficeSpecialityCommandHandler;
 
   beforeEach(async () => {
@@ -28,13 +27,13 @@ describe('CreateBackofficeSpecialityCommandHandler', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     handler = moduleRef.get<CreateBackofficeSpecialityCommandHandler>(
       CreateBackofficeSpecialityCommandHandler,
     );
   });
 
-  it('should create a method', async () => {
+  it('should create a speciality', async () => {
     const plainData = {
       id: BackofficeSpecialityIdFixture.random().value,
       name: BackofficeSpecialityNameFixture.random().value,
@@ -43,7 +42,9 @@ describe('CreateBackofficeSpecialityCommandHandler', () => {
     await handler.execute(new CreateBackofficeSpecialityCommand(plainData));
 
     const result = await database.manager.findOne(SpecialityEntity, {
-      id: plainData.id,
+      where: {
+        id: plainData.id,
+      },
     });
 
     expect(result).not.toBeUndefined();

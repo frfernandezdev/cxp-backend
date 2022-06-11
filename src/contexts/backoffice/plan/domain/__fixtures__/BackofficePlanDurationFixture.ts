@@ -7,6 +7,6 @@ export class BackofficePlanDurationFixture {
   }
 
   static random(): BackofficePlanDuration {
-    return this, this.create(faker.random.number());
+    return this, this.create(faker.datatype.number());
   }
 }

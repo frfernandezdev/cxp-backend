@@ -22,4 +22,4 @@ import { BackofficeSQLiteMethodRepository } from './infrasctructure/persistence/
     UpdateBackofficeMethodCommandHandler,
   ],
 })
-export class BackOfficeMethodModule {}
+export class BackofficeMethodModule {}

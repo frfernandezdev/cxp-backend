@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/BackofficeSQLiteModule';
 import { SpecialityEntity } from 'src/contexts/shared/infrastructure/entities/SpecialityEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeSpeciality } from '../../../domain/BackofficeSpeciality';
 import { BackofficeSpecialityIdFixture } from '../../../domain/__fixtures__/BackofficeSpecialityIdFixture';
 import { BackofficeSpecialityNameFixture } from '../../../domain/__fixtures__/BackofficeSpecialityNameFixture';
@@ -19,7 +19,7 @@ const backofficeSpecialityMock = () =>
   );
 
 describe('BackofficeSpecialityFinder', () => {
-  let database: Connection;
+  let database: DataSource;
   let finder: BackofficeSpecialityFinder;
 
   beforeEach(async () => {
@@ -31,7 +31,7 @@ describe('BackofficeSpecialityFinder', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     finder = moduleRef.get<BackofficeSpecialityFinder>(
       BackofficeSpecialityFinder,
     );

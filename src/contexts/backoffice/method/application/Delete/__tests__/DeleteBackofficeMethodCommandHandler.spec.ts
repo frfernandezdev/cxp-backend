@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { MethodEntity } from 'src/contexts/shared/infrastructure/entities/MethodEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeMethod } from '../../../domain/BackofficeMethod';
 import { BackofficeMethodIdFixture } from '../../../domain/__fixtures__/BackofficeMethodIdFixture';
 import { BackofficeMethodNameFixture } from '../../../domain/__fixtures__/BackofficeMethodNameFixture';
@@ -21,7 +21,7 @@ const backofficeMethodMock = () =>
   );
 
 describe('DeleteBackofficeMethodCommandHandler', () => {
-  let database: Connection;
+  let database: DataSource;
   let handler: DeleteBackofficeMethodCommandHandler;
 
   beforeEach(async () => {
@@ -34,7 +34,7 @@ describe('DeleteBackofficeMethodCommandHandler', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     handler = moduleRef.get<DeleteBackofficeMethodCommandHandler>(
       DeleteBackofficeMethodCommandHandler,
     );
@@ -61,7 +61,9 @@ describe('DeleteBackofficeMethodCommandHandler', () => {
       const id = method.id;
       await handler.execute(new DeleteBackofficeMethodCommand(id));
 
-      const result = await database.manager.findOne(MethodEntity, { id });
+      const result = await database.manager.findOne(MethodEntity, {
+        where: { id },
+      });
 
       expect(result).toBeUndefined();
     });

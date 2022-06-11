@@ -1,6 +1,6 @@
 import { BackofficePlan } from '../domain/BackofficePlan';
 
-export class BackofficePlansResponse {
+export class BackofficePlanResponse {
   readonly plans: Array<BackofficePlan>;
 
   constructor(plans: Array<BackofficePlan>) {

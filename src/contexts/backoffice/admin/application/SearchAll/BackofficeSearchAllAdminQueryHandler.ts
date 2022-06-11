@@ -10,8 +10,10 @@ export class BackofficeSearchAllAdminQueryHandler
   constructor(private readonly finder: BackofficeAdminFinder) {}
 
   async execute(
-    command: BackofficeSearchAllAdminQuery,
+    query: BackofficeSearchAllAdminQuery,
   ): Promise<BackofficeAdminResponse> {
-    return this.finder.run();
+    const { offset, limit } = query;
+
+    return this.finder.run(offset, limit);
   }
 }

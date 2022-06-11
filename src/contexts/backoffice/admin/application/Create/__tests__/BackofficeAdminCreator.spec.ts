@@ -1,8 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { AdminEntity } from 'src/contexts/shared/infrastructure/entities/AdminEntity';
-import { Connection } from 'typeorm';
-import { BackofficeAdmin } from '../../../domain/BackofficeAdmin';
+import { DataSource } from 'typeorm';
 import { BackofficeAdminDisplayNameFixture } from '../../../domain/__fixtures__/BackofficeAdminDisplayNameFixture';
 import { BackofficeAdminEmailFixture } from '../../../domain/__fixtures__/BackofficeAdminEmailFixture';
 import { BackofficeAdminIdFixture } from '../../../domain/__fixtures__/BackofficeAdminIdFixture';
@@ -19,7 +18,7 @@ jest.mock(
 );
 
 describe('BackofficeAdminCreator', () => {
-  let database: Connection;
+  let database: DataSource;
   let creator: BackofficeAdminCreator;
 
   beforeEach(async () => {
@@ -28,12 +27,12 @@ describe('BackofficeAdminCreator', () => {
       providers: [BackofficeSQLiteAdminRepository, BackofficeAdminCreator],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     creator = moduleRef.get<BackofficeAdminCreator>(BackofficeAdminCreator);
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
   describe('#run', () => {
@@ -51,7 +50,9 @@ describe('BackofficeAdminCreator', () => {
       await creator.run(mock);
 
       const result = await database.manager.findOne(AdminEntity, {
-        id: mock.adminId.value,
+        where: {
+          id: mock.adminId.value,
+        },
       });
 
       expect(result).not.toBeUndefined();

@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { MethodEntity } from 'src/contexts/shared/infrastructure/entities/MethodEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeMethodIdFixture } from '../../../domain/__fixtures__/BackofficeMethodIdFixture';
 import { BackofficeMethodNameFixture } from '../../../domain/__fixtures__/BackofficeMethodNameFixture';
 import { BackofficeSQLiteMethodRepository } from '../../../infrasctructure/persistence/BackofficeSQLiteMethodRepository';
@@ -14,7 +14,7 @@ jest.mock(
 );
 
 describe('CreateBackofficeMethodCommandHandler', () => {
-  let database: Connection;
+  let database: DataSource;
   let handler: CreateBackofficeMethodCommandHandler;
 
   beforeEach(async () => {
@@ -27,7 +27,7 @@ describe('CreateBackofficeMethodCommandHandler', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     handler = moduleRef.get<CreateBackofficeMethodCommandHandler>(
       CreateBackofficeMethodCommandHandler,
     );
@@ -42,7 +42,9 @@ describe('CreateBackofficeMethodCommandHandler', () => {
     await handler.execute(new CreateBackofficeMethodCommand(plainData));
 
     const result = await database.manager.findOne(MethodEntity, {
-      id: plainData.id,
+      where: {
+        id: plainData.id,
+      },
     });
 
     expect(result).not.toBeUndefined();

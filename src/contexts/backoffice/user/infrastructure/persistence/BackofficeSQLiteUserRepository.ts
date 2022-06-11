@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Criteria } from 'src/contexts/shared/domain/criteria/Criteria';
 import { UserEntity } from 'src/contexts/shared/infrastructure/entities/UserEntity';
-import { SQLiteCriteriaConverter } from 'src/contexts/shared/infrastructure/sqlite/SQLiteCriteraConverter';
+import { SQLiteCriteriaConverter } from 'src/contexts/shared/infrastructure/sqlite/SQLiteCriteriaConverter';
 import { Repository } from 'typeorm';
 import { BackofficeUser } from '../../domain/BackofficeUser';
 import { BackofficeUserId } from '../../domain/BackofficeUserId';
@@ -49,7 +49,7 @@ export class BackofficeSQLiteUserRepository {
   }
 
   async findById(id: BackofficeUserId): Promise<BackofficeUser> {
-    const entity = await this.repository.findOne({ id: id.value });
+    const entity = await this.repository.findOne({ where: { id: id.value } });
 
     return BackofficeUser.fromPrimitives({
       id: entity.id,
@@ -106,8 +106,9 @@ export class BackofficeSQLiteUserRepository {
     );
   }
 
-  async findAll(): Promise<BackofficeUser[]> {
-    const entities = await this.repository.find();
+  async findAll(criteria: Criteria): Promise<BackofficeUser[]> {
+    const options = this.criteriaConverter.convert(criteria);
+    const entities = await this.repository.find(options);
 
     return entities.map((entity) =>
       BackofficeUser.fromPrimitives({

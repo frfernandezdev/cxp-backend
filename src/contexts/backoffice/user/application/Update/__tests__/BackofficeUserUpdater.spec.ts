@@ -3,6 +3,17 @@ import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastru
 import { UserEntity } from 'src/contexts/shared/infrastructure/entities/UserEntity';
 import { DataSource } from 'typeorm';
 import { BackofficeUser } from '../../../domain/BackofficeUser';
+import { BackofficeUserCompleteRegister } from '../../../domain/BackofficeUserCompleteRegister';
+import { BackofficeUserDisplayName } from '../../../domain/BackofficeUserDisplayName';
+import { BackofficeUserEmail } from '../../../domain/BackofficeUserEmail';
+import { BackofficeUserId } from '../../../domain/BackofficeUserId';
+import { BackofficeUserLastname } from '../../../domain/BackofficeUserLastname';
+import { BackofficeUserLocation } from '../../../domain/BackofficeUserLocation';
+import { BackofficeUserName } from '../../../domain/BackofficeUserName';
+import { BackofficeUserPhoneNumber } from '../../../domain/BackofficeUserPhoneNumber';
+import { BackofficeUserPhotoURL } from '../../../domain/BackofficeUserPhotoURL';
+import { BackofficeUserSessionTaken } from '../../../domain/BackofficeUserSessionTaken';
+import { BackofficeUserTimezone } from '../../../domain/BackofficeUserTimezone';
 import { BackofficeUserCompleteRegisterFixture } from '../../../domain/__fixtures__/BackofficeUserCompleteRegisterFixture';
 import { BackofficeUserDisplayNameFixture } from '../../../domain/__fixtures__/BackofficeUserDisplayNameFixture';
 import { BackofficeUserEmailFixture } from '../../../domain/__fixtures__/BackofficeUserEmailFixture';
@@ -15,9 +26,7 @@ import { BackofficeUserPhotoURLFixture } from '../../../domain/__fixtures__/Back
 import { BackofficeUserSessionTakenFixture } from '../../../domain/__fixtures__/BackofficeUserSessionTakenFixture';
 import { BackofficeUserTimezoneFixture } from '../../../domain/__fixtures__/BackofficeUserTimezoneFixture';
 import { BackofficeSQLiteUserRepository } from '../../../infrastructure/persistence/BackofficeSQLiteUserRepository';
-import { BackofficeUserEnabler } from '../BackofficeUserEnabler';
-import { EnabledBackofficeUserCommand } from '../EnabledBackofficeUserCommand';
-import { EnabledBackofficeUserCommandHandler } from '../EnabledBackofficeUserCommandHandler';
+import { BackofficeUserUpdater } from '../BackofficeUserUpdater';
 
 jest.mock(
   'src/contexts/backoffice/shared/infrastructure/persistence/BackofficeSQLiteModule',
@@ -33,36 +42,30 @@ const backofficeUserMock = () =>
     BackofficeUserNameFixture.random(),
     BackofficeUserLastnameFixture.random(),
     BackofficeUserCompleteRegisterFixture.random(),
-    BackofficeUserTimezoneFixture.random(),
-    BackofficeUserSessionTakenFixture.random(),
     BackofficeUserLocationFixture.random(),
+    BackofficeUserSessionTakenFixture.random(),
+    BackofficeUserTimezoneFixture.random(),
   );
 
-describe('EnabledBackofficeUserCommandHandler', () => {
+describe('BackofficeUserUpdater', () => {
   let database: DataSource;
-  let handler: EnabledBackofficeUserCommandHandler;
+  let updater: BackofficeUserUpdater;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [BackofficeSQLiteModule],
-      providers: [
-        BackofficeSQLiteUserRepository,
-        BackofficeUserEnabler,
-        EnabledBackofficeUserCommandHandler,
-      ],
+      providers: [BackofficeSQLiteUserRepository, BackofficeUserUpdater],
     }).compile();
 
     database = moduleRef.get<DataSource>(DataSource);
-    handler = moduleRef.get<EnabledBackofficeUserCommandHandler>(
-      EnabledBackofficeUserCommandHandler,
-    );
+    updater = moduleRef.get<BackofficeUserUpdater>(BackofficeUserUpdater);
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
-  describe('#execute', () => {
+  describe('#run', () => {
     let user: UserEntity;
 
     beforeEach(async () => {
@@ -96,9 +99,23 @@ describe('EnabledBackofficeUserCommandHandler', () => {
       await database.manager.save(user);
     });
 
-    it('should enabled a user', async () => {
-      const id = user.id;
-      await handler.execute(new EnabledBackofficeUserCommand(id));
+    it('should update a user', async () => {
+      const name = BackofficeUserNameFixture.random();
+      await updater.run({
+        userId: new BackofficeUserId(user.id),
+        userEmail: new BackofficeUserEmail(user.email),
+        userDisplayName: new BackofficeUserDisplayName(user.displayName),
+        userPhoneNumber: new BackofficeUserPhoneNumber(user.phoneNumber),
+        userPhotoURL: new BackofficeUserPhotoURL(user.photoURL),
+        userName: new BackofficeUserName(user.name),
+        userLastname: new BackofficeUserLastname(user.lastname),
+        userCompleteRegister: new BackofficeUserCompleteRegister(
+          user.completeRegister,
+        ),
+        userLocation: new BackofficeUserLocation(user.location),
+        userTimezone: new BackofficeUserTimezone(user.timezone),
+        userSessionTaken: new BackofficeUserSessionTaken(user.sessionTaken),
+      });
 
       const result = await database.manager.findOne(UserEntity, {
         where: {
@@ -107,7 +124,7 @@ describe('EnabledBackofficeUserCommandHandler', () => {
       });
 
       expect(result).not.toBeUndefined();
-      expect(result.disabled).toBeFalsy();
+      expect(result.name).toBe(name.value);
     });
   });
 });

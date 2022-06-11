@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { UserEntity } from 'src/contexts/shared/infrastructure/entities/UserEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeUser } from '../../../domain/BackofficeUser';
 import { BackofficeUserId } from '../../../domain/BackofficeUserId';
 import { BackofficeUserCompleteRegisterFixture } from '../../../domain/__fixtures__/BackofficeUserCompleteRegisterFixture';
@@ -38,7 +38,7 @@ const backofficeUserMock = () =>
   );
 
 describe('BackofficeUserDisabler', () => {
-  let database: Connection;
+  let database: DataSource;
   let disabler: BackofficeUserDisabler;
 
   beforeEach(async () => {
@@ -47,12 +47,12 @@ describe('BackofficeUserDisabler', () => {
       providers: [BackofficeSQLiteUserRepository, BackofficeUserDisabler],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     disabler = moduleRef.get<BackofficeUserDisabler>(BackofficeUserDisabler);
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
   describe('#run', () => {
@@ -94,7 +94,9 @@ describe('BackofficeUserDisabler', () => {
       await disabler.run([new BackofficeUserId(id)]);
 
       const result = await database.manager.findOne(UserEntity, {
-        id: user.id,
+        where: {
+          id: user.id,
+        },
       });
 
       expect(result).not.toBeUndefined();

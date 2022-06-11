@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { AdminEntity } from 'src/contexts/shared/infrastructure/entities/AdminEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeAdmin } from '../../../domain/BackofficeAdmin';
 import { BackofficeAdminId } from '../../../domain/BackofficeAdminId';
 import { BackofficeAdminDisplayNameFixture } from '../../../domain/__fixtures__/BackofficeAdminDisplayNameFixture';
@@ -32,7 +32,7 @@ const backofficeAdminMock = () =>
   );
 
 describe('BackofficeAdminDeleter', () => {
-  let database: Connection;
+  let database: DataSource;
   let deleter: BackofficeAdminDeleter;
 
   beforeEach(async () => {
@@ -41,12 +41,12 @@ describe('BackofficeAdminDeleter', () => {
       providers: [BackofficeSQLiteAdminRepository, BackofficeAdminDeleter],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     deleter = moduleRef.get<BackofficeAdminDeleter>(BackofficeAdminDeleter);
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
   describe('#run', () => {
@@ -82,7 +82,9 @@ describe('BackofficeAdminDeleter', () => {
       await deleter.run([new BackofficeAdminId(id)]);
 
       const result = await database.manager.findOne(AdminEntity, {
-        id: admin.id,
+        where: {
+          id: admin.id,
+        },
       });
 
       expect(result).toBeUndefined();

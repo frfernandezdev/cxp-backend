@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Criteria } from 'src/contexts/shared/domain/criteria/Criteria';
-import { MethodEntity } from 'src/contexts/shared/infrastructure/entities/MethodEntity';
 import { SpecialityEntity } from 'src/contexts/shared/infrastructure/entities/SpecialityEntity';
-import { SQLiteCriteriaConverter } from 'src/contexts/shared/infrastructure/sqlite/SQLiteCriteraConverter';
+import { SQLiteCriteriaConverter } from 'src/contexts/shared/infrastructure/sqlite/SQLiteCriteriaConverter';
 import { Repository } from 'typeorm';
 import { BackofficeSpeciality } from '../../domain/BackofficeSpeciality';
 import { BackofficeSpecialityId } from '../../domain/BackofficeSpecialityId';
@@ -29,7 +28,7 @@ export class BackofficeSQLiteSpecialityRepository {
   }
 
   async findById(id: BackofficeSpecialityId): Promise<BackofficeSpeciality> {
-    const entity = await this.repository.findOne({ id: id.value });
+    const entity = await this.repository.findOne({ where: { id: id.value } });
 
     return BackofficeSpeciality.fromPrimitives({
       id: entity.id,
@@ -59,8 +58,9 @@ export class BackofficeSQLiteSpecialityRepository {
     );
   }
 
-  async findAll(): Promise<BackofficeSpeciality[]> {
-    const entities = await this.repository.find();
+  async findAll(criteria: Criteria): Promise<BackofficeSpeciality[]> {
+    const options = this.criteriaConverter.convert(criteria);
+    const entities = await this.repository.find(options);
 
     return entities.map((entity) =>
       BackofficeSpeciality.fromPrimitives({

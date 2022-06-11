@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { PlanEntity } from 'src/contexts/shared/infrastructure/entities/PlanEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficePlan } from '../../../domain/BackofficePlan';
 import { BackofficePlanCoin } from '../../../domain/BackofficePlanCoin';
 import { BackofficePlanDuration } from '../../../domain/BackofficePlanDuration';
@@ -26,7 +26,7 @@ const backofficePlanMock = () =>
   );
 
 describe('BackofficePlanUpdater', () => {
-  let database: Connection;
+  let database: DataSource;
   let updater: BackofficePlanUpdater;
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe('BackofficePlanUpdater', () => {
       providers: [BackofficeSQLitePlanRepository, BackofficePlanUpdater],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     updater = moduleRef.get<BackofficePlanUpdater>(BackofficePlanUpdater);
   });
 
@@ -68,7 +68,9 @@ describe('BackofficePlanUpdater', () => {
       });
 
       const result = await database.manager.findOne(PlanEntity, {
-        id: plan.id,
+        where: {
+          id: plan.id,
+        },
       });
 
       expect(result).not.toBeUndefined();

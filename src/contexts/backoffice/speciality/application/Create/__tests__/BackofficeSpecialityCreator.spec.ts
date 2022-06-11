@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { SpecialityEntity } from 'src/contexts/shared/infrastructure/entities/SpecialityEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeSpecialityIdFixture } from '../../../domain/__fixtures__/BackofficeSpecialityIdFixture';
 import { BackofficeSpecialityNameFixture } from '../../../domain/__fixtures__/BackofficeSpecialityNameFixture';
 import { BackofficeSQLiteSpecialityRepository } from '../../../infrastructure/persistence/BackofficeSQLiteSpecialityRepository';
@@ -12,7 +12,7 @@ jest.mock(
 );
 
 describe('BackofficeSpecialityCreator', () => {
-  let database: Connection;
+  let database: DataSource;
   let creator: BackofficeSpecialityCreator;
 
   beforeEach(async () => {
@@ -24,14 +24,14 @@ describe('BackofficeSpecialityCreator', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     creator = moduleRef.get<BackofficeSpecialityCreator>(
       BackofficeSpecialityCreator,
     );
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
   describe('#run', () => {
@@ -43,7 +43,9 @@ describe('BackofficeSpecialityCreator', () => {
       await creator.run(mock);
 
       const result = await database.manager.findOne(SpecialityEntity, {
-        id: mock.specialityId.value,
+        where: {
+          id: mock.specialityId.value,
+        },
       });
 
       expect(result).not.toBeUndefined();

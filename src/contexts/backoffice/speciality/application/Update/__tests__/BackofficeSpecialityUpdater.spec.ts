@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { SpecialityEntity } from 'src/contexts/shared/infrastructure/entities/SpecialityEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeSpeciality } from '../../../domain/BackofficeSpeciality';
 import { BackofficeSpecialityId } from '../../../domain/BackofficeSpecialityId';
 import { BackofficeSpecialityIdFixture } from '../../../domain/__fixtures__/BackofficeSpecialityIdFixture';
@@ -20,7 +20,7 @@ const backofficeSpecialityMock = () =>
   );
 
 describe('BackofficeSpecialityUpdater', () => {
-  let database: Connection;
+  let database: DataSource;
   let updater: BackofficeSpecialityUpdater;
 
   beforeEach(async () => {
@@ -32,14 +32,14 @@ describe('BackofficeSpecialityUpdater', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     updater = moduleRef.get<BackofficeSpecialityUpdater>(
       BackofficeSpecialityUpdater,
     );
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
   describe('#run', () => {
@@ -63,7 +63,9 @@ describe('BackofficeSpecialityUpdater', () => {
       });
 
       const result = await database.manager.findOne(SpecialityEntity, {
-        id: speciality.id,
+        where: {
+          id: speciality.id,
+        },
       });
 
       expect(result).not.toBeUndefined();

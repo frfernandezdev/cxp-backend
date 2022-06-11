@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { PlanEntity } from 'src/contexts/shared/infrastructure/entities/PlanEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficePlan } from '../../../domain/BackofficePlan';
 import { BackofficePlanCoinFixture } from '../../../domain/__fixtures__/BackofficePlanCoinFixture';
 import { BackofficePlanDurationFixture } from '../../../domain/__fixtures__/BackofficePlanDurationFixture';
@@ -25,7 +25,7 @@ const backofficePlanMock = () =>
   );
 
 describe('EnabledBackofficePlanCommandHandler', () => {
-  let database: Connection;
+  let database: DataSource;
   let handler: EnabledBackofficePlanCommandHandler;
 
   beforeEach(async () => {
@@ -38,14 +38,14 @@ describe('EnabledBackofficePlanCommandHandler', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     handler = moduleRef.get<EnabledBackofficePlanCommandHandler>(
       EnabledBackofficePlanCommandHandler,
     );
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
   describe('#execute', () => {
@@ -68,7 +68,9 @@ describe('EnabledBackofficePlanCommandHandler', () => {
       await handler.execute(new EnabledBackofficePlanCommand(id));
 
       const result = await database.manager.findOne(PlanEntity, {
-        id: plan.id,
+        where: {
+          id: plan.id,
+        },
       });
 
       expect(result).not.toBeUndefined();

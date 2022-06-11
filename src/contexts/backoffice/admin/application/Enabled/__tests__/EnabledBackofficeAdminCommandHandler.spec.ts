@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { AdminEntity } from 'src/contexts/shared/infrastructure/entities/AdminEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeAdmin } from '../../../domain/BackofficeAdmin';
 import { BackofficeAdminDisplayNameFixture } from '../../../domain/__fixtures__/BackofficeAdminDisplayNameFixture';
 import { BackofficeAdminEmailFixture } from '../../../domain/__fixtures__/BackofficeAdminEmailFixture';
@@ -33,7 +33,7 @@ const backofficeAdminMock = () =>
   );
 
 describe('EnabledBackofficeAdminCommandHandler', () => {
-  let database: Connection;
+  let database: DataSource;
   let handler: EnabledBackofficeAdminCommandHandler;
 
   beforeEach(async () => {
@@ -46,7 +46,7 @@ describe('EnabledBackofficeAdminCommandHandler', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     handler = moduleRef.get<EnabledBackofficeAdminCommandHandler>(
       EnabledBackofficeAdminCommandHandler,
     );
@@ -89,7 +89,9 @@ describe('EnabledBackofficeAdminCommandHandler', () => {
       await handler.execute(new EnabledBackofficeAdminCommand(id));
 
       const result = await database.manager.findOne(AdminEntity, {
-        id: admin.id,
+        where: {
+          id: admin.id,
+        },
       });
 
       expect(result).not.toBeUndefined();

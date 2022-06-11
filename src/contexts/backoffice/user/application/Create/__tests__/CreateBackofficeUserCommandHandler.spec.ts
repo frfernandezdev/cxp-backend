@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
 import { UserEntity } from 'src/contexts/shared/infrastructure/entities/UserEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeUserCompleteRegisterFixture } from '../../../domain/__fixtures__/BackofficeUserCompleteRegisterFixture';
 import { BackofficeUserDisplayNameFixture } from '../../../domain/__fixtures__/BackofficeUserDisplayNameFixture';
 import { BackofficeUserEmailFixture } from '../../../domain/__fixtures__/BackofficeUserEmailFixture';
@@ -23,7 +23,7 @@ jest.mock(
 );
 
 describe('CreateBackofficeUserCommandHandler', () => {
-  let database: Connection;
+  let database: DataSource;
   let handler: CreateBackofficeUserCommandHandler;
 
   beforeEach(async () => {
@@ -36,7 +36,7 @@ describe('CreateBackofficeUserCommandHandler', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     handler = moduleRef.get<CreateBackofficeUserCommandHandler>(
       CreateBackofficeUserCommandHandler,
     );
@@ -60,7 +60,9 @@ describe('CreateBackofficeUserCommandHandler', () => {
     await handler.execute(new CreateBackofficeUserCommand(plainData));
 
     const result = await database.manager.findOne(UserEntity, {
-      id: plainData.id,
+      where: {
+        id: plainData.id,
+      },
     });
 
     expect(result).not.toBeUndefined();

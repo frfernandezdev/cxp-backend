@@ -6,7 +6,13 @@ import { AppApiPlanModule } from './plan/AppApiPlanModule';
 import { AppApiSpecialityModule } from './speciality/AppApiSpecialityModule';
 
 @Module({
-  imports: [ApiModule],
+  imports: [
+    ApiModule,
+    AppApiExpertModule,
+    AppApiMethodModule,
+    AppApiPlanModule,
+    AppApiSpecialityModule,
+  ],
   exports: [
     AppApiExpertModule,
     AppApiMethodModule,

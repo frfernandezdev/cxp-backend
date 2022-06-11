@@ -1,8 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
-import { MethodEntity } from 'src/contexts/shared/infrastructure/entities/MethodEntity';
 import { SpecialityEntity } from 'src/contexts/shared/infrastructure/entities/SpecialityEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeSpeciality } from '../../../domain/BackofficeSpeciality';
 import { BackofficeSpecialityId } from '../../../domain/BackofficeSpecialityId';
 import { BackofficeSpecialityIdFixture } from '../../../domain/__fixtures__/BackofficeSpecialityIdFixture';
@@ -21,7 +20,7 @@ const BackofficeSpecialityMock = () =>
   );
 
 describe('BackofficeMethodDisabler', () => {
-  let database: Connection;
+  let database: DataSource;
   let disabler: BackofficeSpecialityDisabler;
 
   beforeEach(async () => {
@@ -33,14 +32,14 @@ describe('BackofficeMethodDisabler', () => {
       ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     disabler = moduleRef.get<BackofficeSpecialityDisabler>(
       BackofficeSpecialityDisabler,
     );
   });
 
   afterEach(async () => {
-    await database.close();
+    await database.destroy();
   });
 
   describe('#run', () => {
@@ -61,7 +60,9 @@ describe('BackofficeMethodDisabler', () => {
       await disabler.run([new BackofficeSpecialityId(id)]);
 
       const result = await database.manager.findOne(SpecialityEntity, {
-        id: speciality.id,
+        where: {
+          id: speciality.id,
+        },
       });
 
       expect(result).not.toBeUndefined();

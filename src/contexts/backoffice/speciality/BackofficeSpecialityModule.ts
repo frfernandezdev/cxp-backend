@@ -22,4 +22,4 @@ import { BackofficeSQLiteSpecialityRepository } from './infrastructure/persisten
     UpdateBackofficeSpecialityCommandHandler,
   ],
 })
-export class BackOfficeSpecialityModule {}
+export class BackofficeSpecialityModule {}
