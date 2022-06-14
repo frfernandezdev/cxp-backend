@@ -10,7 +10,7 @@ import {
 import { Filters } from 'src/contexts/shared/domain/criteria/Filters';
 import { FilterValue } from 'src/contexts/shared/domain/criteria/FilterValue';
 import { AdminEntity } from 'src/contexts/shared/infrastructure/entities/AdminEntity';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeAdmin } from '../../../domain/BackofficeAdmin';
 import { BackofficeAdminId } from '../../../domain/BackofficeAdminId';
 import { BackofficeAdminDisplayNameFixture } from '../../../domain/__fixtures__/BackofficeAdminDisplayNameFixture';
@@ -40,7 +40,7 @@ const backofficeAdminMock = () =>
   );
 
 describe('BackofficeSQLiteAdminRepository', () => {
-  let database: Connection;
+  let database: DataSource;
   let repository: BackofficeSQLiteAdminRepository;
 
   beforeEach(async () => {
@@ -49,7 +49,7 @@ describe('BackofficeSQLiteAdminRepository', () => {
       providers: [BackofficeSQLiteAdminRepository],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
+    database = moduleRef.get<DataSource>(DataSource);
     repository = moduleRef.get<BackofficeSQLiteAdminRepository>(
       BackofficeSQLiteAdminRepository,
     );
@@ -67,7 +67,9 @@ describe('BackofficeSQLiteAdminRepository', () => {
       await repository.save(admin);
 
       const entity = await database.manager.findOne(AdminEntity, {
-        id: raw.id,
+        where: {
+          id: raw.id,
+        },
       });
 
       expect(entity).not.toBeUndefined();
@@ -252,7 +254,9 @@ describe('BackofficeSQLiteAdminRepository', () => {
       await repository.delete(admin.id);
 
       const result = await database.manager.findOne(AdminEntity, {
-        id: admin.id,
+        where: {
+          id: admin.id,
+        },
       });
 
       expect(result).toBeUndefined();
