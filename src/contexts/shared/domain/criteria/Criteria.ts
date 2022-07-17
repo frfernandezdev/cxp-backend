@@ -8,7 +8,7 @@ export class Criteria {
   readonly offset?: number;
 
   constructor(
-    filters: Filters,
+    filters?: Filters,
     order?: Order,
     limit?: number,
     offset?: number,
@@ -20,7 +20,7 @@ export class Criteria {
   }
 
   public hasFilters(): boolean {
-    return this.filters.filters.length > 0;
+    return this.filters ? this.filters.hasFilters() : false;
   }
 
   public hasOrder(): boolean {
