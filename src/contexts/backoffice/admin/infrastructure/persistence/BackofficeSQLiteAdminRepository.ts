@@ -42,11 +42,9 @@ export class BackofficeSQLiteAdminRepository {
     await this.repository.save(entity);
   }
 
-  async findById(id: BackofficeAdminId): Promise<BackofficeAdmin> {
-    const entity = await this.repository.findOne({
-      where: {
-        id: id.value,
-      },
+  async findById({ value }: BackofficeAdminId): Promise<BackofficeAdmin> {
+    const entity = await this.repository.findOneBy({
+      id: value,
     });
 
     return BackofficeAdmin.fromPrimitives({
@@ -113,40 +111,34 @@ export class BackofficeSQLiteAdminRepository {
     );
   }
 
-  async delete(id: string): Promise<void> {
-    await this.repository.delete({ id });
+  async delete({ value }: BackofficeAdminId): Promise<void> {
+    await this.repository.delete({ id: value });
   }
 
-  async remove(ids: string[]): Promise<void> {
+  async remove(adminsId: BackofficeAdminId[]): Promise<void> {
     const entities = await this.repository.find({
-      where: ids.map((id) => ({ id })),
+      where: adminsId.map(({ value }) => ({ id: value })),
     });
     await this.repository.remove(entities);
   }
 
-  async disabled(ids: string[]): Promise<void> {
-    let entities = await this.repository.find({
-      where: ids.map((id) => ({ id })),
+  async disabled({ value }: BackofficeAdminId): Promise<void> {
+    const entity = await this.repository.findOneBy({
+      id: value,
     });
 
-    entities = entities.map((item) => {
-      item.disabled = true;
-      return item;
-    });
+    entity.disabled = true;
 
-    await this.repository.save(entities);
+    await this.repository.save(entity);
   }
 
-  async enabled(ids: string[]): Promise<void> {
-    let entities = await this.repository.find({
-      where: ids.map((id) => ({ id })),
+  async enabled({ value }: BackofficeAdminId): Promise<void> {
+    const entity = await this.repository.findOneBy({
+      id: value,
     });
 
-    entities = entities.map((item) => {
-      item.disabled = false;
-      return item;
-    });
+    entity.disabled = false;
 
-    await this.repository.save(entities);
+    await this.repository.save(entity);
   }
 }

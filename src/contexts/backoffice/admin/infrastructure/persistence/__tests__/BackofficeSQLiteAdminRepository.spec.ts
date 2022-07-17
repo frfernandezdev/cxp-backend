@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/BackofficeSQLiteModule';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { Criteria } from 'src/contexts/shared/domain/criteria/Criteria';
 import { Filter } from 'src/contexts/shared/domain/criteria/Filter';
 import { FilterField } from 'src/contexts/shared/domain/criteria/FilterField';
@@ -9,8 +9,10 @@ import {
 } from 'src/contexts/shared/domain/criteria/FilterOperator';
 import { Filters } from 'src/contexts/shared/domain/criteria/Filters';
 import { FilterValue } from 'src/contexts/shared/domain/criteria/FilterValue';
+import { MockType } from 'src/contexts/shared/domain/MockType';
 import { AdminEntity } from 'src/contexts/shared/infrastructure/entities/AdminEntity';
-import { DataSource } from 'typeorm';
+import { SQLiteCriteriaConverter } from 'src/contexts/shared/infrastructure/sqlite/SQLiteCriteriaConverter';
+import { Repository } from 'typeorm';
 import { BackofficeAdmin } from '../../../domain/BackofficeAdmin';
 import { BackofficeAdminId } from '../../../domain/BackofficeAdminId';
 import { BackofficeAdminDisplayNameFixture } from '../../../domain/__fixtures__/BackofficeAdminDisplayNameFixture';
@@ -22,6 +24,7 @@ import { BackofficeAdminPhoneNumberFixture } from '../../../domain/__fixtures__/
 import { BackofficeAdminPhotoURLFixture } from '../../../domain/__fixtures__/BackofficeAdminPhotoURLFixture';
 import { BackofficeAdminRoleFixture } from '../../../domain/__fixtures__/BackofficeAdminRoleFixture';
 import { BackofficeSQLiteAdminRepository } from '../BackofficeSQLiteAdminRepository';
+import { AdminRepository } from '../__mocks__/AdminRepository';
 
 jest.mock(
   'src/contexts/backoffice/shared/infrastructure/persistence/BackofficeSQLiteModule',
@@ -39,316 +42,202 @@ const backofficeAdminMock = () =>
     BackofficeAdminRoleFixture.random(),
   );
 
+const makeAdminEntity = (admin: BackofficeAdmin): AdminEntity => {
+  const entity = new AdminEntity();
+  const raw = admin.toPrimitives();
+
+  entity.id = raw.id;
+  entity.email = raw.email;
+  entity.displayName = raw.displayName;
+  entity.phoneNumber = raw.phoneNumber;
+  entity.photoURL = raw.photoURL;
+  entity.name = raw.name;
+  entity.lastname = raw.lastname;
+  entity.role = raw.role;
+
+  return entity;
+};
+
 describe('BackofficeSQLiteAdminRepository', () => {
-  let database: DataSource;
   let repository: BackofficeSQLiteAdminRepository;
+  let repositoryMock: MockType<Repository<AdminEntity>>;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [BackofficeSQLiteModule],
-      providers: [BackofficeSQLiteAdminRepository],
+      //imports: [BackofficeSQLiteModule],
+      providers: [
+        BackofficeSQLiteAdminRepository,
+        {
+          provide: getRepositoryToken(AdminEntity),
+          useFactory: AdminRepository,
+        },
+      ],
     }).compile();
 
-    database = moduleRef.get<DataSource>(DataSource);
     repository = moduleRef.get<BackofficeSQLiteAdminRepository>(
       BackofficeSQLiteAdminRepository,
     );
-  });
-
-  afterEach(async () => {
-    await database.close();
+    repositoryMock = moduleRef.get(getRepositoryToken(AdminEntity));
   });
 
   describe('#save', () => {
-    it('should create a new admin', async () => {
-      const admin = backofficeAdminMock();
-      const raw = admin.toPrimitives();
+    it('should call to method save', async () => {
+      const mockAdmin = backofficeAdminMock();
+      const mockAdminEntity = makeAdminEntity(mockAdmin);
 
-      await repository.save(admin);
-
-      const entity = await database.manager.findOne(AdminEntity, {
-        where: {
-          id: raw.id,
-        },
-      });
-
-      expect(entity).not.toBeUndefined();
-      expect(raw).toMatchObject({
-        id: entity.id,
-        email: entity.email,
-        displayName: entity.displayName,
-        phoneNumber: entity.phoneNumber,
-        photoURL: entity.photoURL,
-        name: entity.name,
-        lastname: entity.lastname,
-        role: +entity.role,
-      });
+      repositoryMock.save.mockReturnValue(mockAdminEntity);
+      await expect(repository.save(mockAdmin)).resolves.toBeUndefined();
+      expect(repositoryMock.save).toHaveBeenCalledWith(mockAdminEntity);
     });
   });
 
   describe('#findById', () => {
-    let admin: AdminEntity;
+    it('should call to method findById', async () => {
+      const mockAdmin = backofficeAdminMock();
+      const mockAdminEntity = makeAdminEntity(mockAdmin);
+      const raw = mockAdmin.toPrimitives();
+      const adminId = new BackofficeAdminId(raw.id);
 
-    beforeEach(async () => {
-      admin = new AdminEntity();
-      const {
-        id,
-        email,
-        displayName,
-        phoneNumber,
-        photoURL,
-        name,
-        lastname,
-        role,
-      } = backofficeAdminMock().toPrimitives();
-
-      admin.id = id;
-      admin.email = email;
-      admin.displayName = displayName;
-      admin.phoneNumber = phoneNumber;
-      admin.photoURL = photoURL;
-      admin.name = name;
-      admin.lastname = lastname;
-      admin.role = role;
-
-      await database.manager.save(AdminEntity, admin);
-    });
-
-    it('should find a admin by id', async () => {
-      const result = await repository.findById(new BackofficeAdminId(admin.id));
-      const raw = result.toPrimitives();
-
-      expect(admin).not.toBeUndefined();
-      expect(raw).toMatchObject({
-        id: admin.id,
-        email: admin.email,
-        displayName: admin.displayName,
-        phoneNumber: admin.phoneNumber,
-        photoURL: admin.photoURL,
-        name: admin.name,
-        lastname: admin.lastname,
-        role: +admin.role,
+      repositoryMock.findOneBy.mockReturnValue(mockAdminEntity);
+      await expect(repository.findById(adminId)).resolves.toEqual(mockAdmin);
+      expect(repositoryMock.findOneBy).toHaveBeenCalledWith({
+        id: adminId.value,
       });
     });
   });
 
   describe('#findOne', () => {
-    let admin: AdminEntity;
+    it('should call to method findOne', async () => {
+      const mockAdmin = backofficeAdminMock();
+      const mockAdminEntity = makeAdminEntity(mockAdmin);
+      const raw = mockAdmin.toPrimitives();
 
-    beforeEach(async () => {
-      admin = new AdminEntity();
-      const {
-        id,
-        email,
-        displayName,
-        phoneNumber,
-        photoURL,
-        name,
-        lastname,
-        role,
-      } = backofficeAdminMock().toPrimitives();
-
-      admin.id = id;
-      admin.email = email;
-      admin.displayName = displayName;
-      admin.phoneNumber = phoneNumber;
-      admin.photoURL = photoURL;
-      admin.name = name;
-      admin.lastname = lastname;
-      admin.role = role;
-
-      await database.manager.save(AdminEntity, admin);
-    });
-
-    it('should find a admin by criteria', async () => {
       const filter = new Filter(
         new FilterField('email'),
         FilterOperator.fromValue(Operator.EQUAL),
-        new FilterValue(admin.email),
+        new FilterValue(raw.email),
       );
       const filters = new Filters([filter]);
       const criteria = new Criteria(filters);
-      const result = await repository.findOne(criteria);
-      const raw = result.toPrimitives();
 
-      expect(result).not.toBeUndefined();
-      expect(raw).toMatchObject({
-        id: admin.id,
-        email: admin.email,
-        displayName: admin.displayName,
-        phoneNumber: admin.phoneNumber,
-        photoURL: admin.photoURL,
-        name: admin.name,
-        lastname: admin.lastname,
-        role: +admin.role,
-      });
+      repositoryMock.findOne.mockReturnValue(mockAdminEntity);
+      await expect(repository.findOne(criteria)).resolves.toEqual(mockAdmin);
+
+      const criteriaConverter = new SQLiteCriteriaConverter();
+      expect(repositoryMock.findOne).toHaveBeenCalledWith(
+        criteriaConverter.convert(criteria),
+      );
     });
   });
 
   describe('#findAll', () => {
-    const admins: AdminEntity[] = [];
+    let mockAdminEntities: AdminEntity[];
+    const mockAdmins: BackofficeAdmin[] = [];
 
-    beforeEach(async () => {
-      for (let i = 0; i < 3; i++) {
-        const item = (admins[i] = new AdminEntity());
-        const {
-          id,
-          email,
-          displayName,
-          phoneNumber,
-          photoURL,
-          name,
-          lastname,
-          role,
-        } = backofficeAdminMock().toPrimitives();
+    beforeEach(() => {
+      function load() {
+        const mockAdmin = backofficeAdminMock();
 
-        item.id = id;
-        item.email = email;
-        item.displayName = displayName;
-        item.phoneNumber = phoneNumber;
-        item.photoURL = photoURL;
-        item.name = name;
-        item.lastname = lastname;
-        item.role = role;
+        mockAdmins.push(mockAdmin);
 
-        await database.manager.save(AdminEntity, item);
+        return makeAdminEntity(mockAdmin);
       }
+
+      const emptyArray = Array.from({ length: 3 });
+      mockAdminEntities = emptyArray.map(load);
     });
 
-    it('should find all admin', async () => {
-      const result = await repository.findAll();
+    it('should call to method findAll', async () => {
+      repositoryMock.find.mockReturnValue(mockAdminEntities);
+      const criteria = new Criteria();
+      await expect(repository.findAll(criteria)).resolves.toEqual(mockAdmins);
 
-      expect(result).toHaveLength(admins.length);
+      const criteriaConverter = new SQLiteCriteriaConverter();
+      expect(repositoryMock.find).toHaveBeenCalledWith(
+        criteriaConverter.convert(criteria),
+      );
     });
   });
 
   describe('#delete', () => {
-    let admin: AdminEntity;
-
-    beforeEach(async () => {
-      admin = new AdminEntity();
-      const {
-        id,
-        email,
-        displayName,
-        phoneNumber,
-        photoURL,
-        name,
-        lastname,
-        role,
-      } = backofficeAdminMock().toPrimitives();
-
-      admin.id = id;
-      admin.email = email;
-      admin.displayName = displayName;
-      admin.phoneNumber = phoneNumber;
-      admin.photoURL = photoURL;
-      admin.name = name;
-      admin.lastname = lastname;
-      admin.role = role;
-
-      await database.manager.save(AdminEntity, admin);
-    });
-
     it('should delete a admin', async () => {
-      await repository.delete(admin.id);
+      const mockAdmin = backofficeAdminMock();
+      const raw = mockAdmin.toPrimitives();
+      const adminId = new BackofficeAdminId(raw.id);
 
-      const result = await database.manager.findOne(AdminEntity, {
-        where: {
-          id: admin.id,
-        },
-      });
-
-      expect(result).toBeUndefined();
+      await expect(repository.delete(adminId)).resolves.toBeUndefined();
+      expect(repositoryMock.delete).toHaveBeenCalledWith({ id: adminId.value });
     });
   });
 
   describe('#remove', () => {
-    const admins: AdminEntity[] = [];
+    let mockAdminEntities: AdminEntity[];
+    const mockAdmins: BackofficeAdmin[] = [];
 
-    beforeEach(async () => {
-      for (let i = 0; i < 3; i++) {
-        const item = (admins[i] = new AdminEntity());
-        const {
-          id,
-          email,
-          displayName,
-          phoneNumber,
-          photoURL,
-          name,
-          lastname,
-          role,
-        } = backofficeAdminMock().toPrimitives();
+    beforeEach(() => {
+      function load() {
+        const mockAdmin = backofficeAdminMock();
 
-        item.id = id;
-        item.email = email;
-        item.displayName = displayName;
-        item.phoneNumber = phoneNumber;
-        item.photoURL = photoURL;
-        item.name = name;
-        item.lastname = lastname;
-        item.role = role;
+        mockAdmins.push(mockAdmin);
 
-        await database.manager.save(AdminEntity, item);
+        return makeAdminEntity(mockAdmin);
       }
+
+      const emptyArray = Array.from({ length: 3 });
+      mockAdminEntities = emptyArray.map(load);
     });
 
     it('should remove admins', async () => {
-      const ids = admins.map((item) => item.id);
-      await repository.remove(ids);
-
-      const results = await database.manager.findByIds(
-        AdminEntity,
-        admins.map((item) => item.id),
+      const adminsId = mockAdmins.map(
+        (item) => new BackofficeAdminId(item.toPrimitives().id),
       );
 
-      expect(results).toHaveLength(0);
-      results.map((item) => expect(admins).not.toContain(item));
+      repositoryMock.find.mockReturnValue(mockAdminEntities);
+      await expect(repository.remove(adminsId)).resolves.toBeUndefined();
+
+      expect(repositoryMock.find).toHaveBeenCalledWith({
+        where: adminsId.map(({ value }) => ({ id: value })),
+      });
+
+      expect(repositoryMock.remove).toHaveBeenCalledWith(mockAdminEntities);
     });
   });
 
-  describe('#disabled', () => {
-    const admins: AdminEntity[] = [];
+  describe('disabled', () => {
+    it('should disabled a admin', async () => {
+      const mockAdmin = backofficeAdminMock();
+      const mockAdminEntity = makeAdminEntity(mockAdmin);
+      const raw = mockAdmin.toPrimitives();
+      const adminId = new BackofficeAdminId(raw.id);
 
-    beforeEach(async () => {
-      for (let i = 0; i < 3; i++) {
-        const item = (admins[i] = new AdminEntity());
-        const {
-          id,
-          email,
-          displayName,
-          phoneNumber,
-          photoURL,
-          name,
-          lastname,
-          role,
-        } = backofficeAdminMock().toPrimitives();
+      repositoryMock.findOneBy.mockReturnValue(mockAdminEntity);
+      await expect(repository.disabled(adminId)).resolves.toBeUndefined();
 
-        item.id = id;
-        item.email = email;
-        item.displayName = displayName;
-        item.phoneNumber = phoneNumber;
-        item.photoURL = photoURL;
-        item.name = name;
-        item.lastname = lastname;
-        item.role = role;
+      expect(repositoryMock.findOneBy).toHaveBeenCalledWith({
+        id: adminId.value,
+      });
 
-        await database.manager.save(AdminEntity, item);
-      }
+      mockAdminEntity.disabled = true;
+      expect(repositoryMock.save).toHaveBeenCalledWith(mockAdminEntity);
     });
+  });
 
-    it('should disabled admin', async () => {
-      const ids = admins.map((item) => item.id);
+  describe('enabled', () => {
+    it('should enabled a admin', async () => {
+      const mockAdmin = backofficeAdminMock();
+      const mockAdminEntity = makeAdminEntity(mockAdmin);
+      const raw = mockAdmin.toPrimitives();
+      const adminId = new BackofficeAdminId(raw.id);
 
-      await repository.disabled(ids);
+      repositoryMock.findOneBy.mockReturnValue(mockAdminEntity);
+      await expect(repository.disabled(adminId)).resolves.toBeUndefined();
 
-      const result = await database.manager.findByIds(
-        AdminEntity,
-        admins.map((item) => item.id),
-      );
+      expect(repositoryMock.findOneBy).toHaveBeenCalledWith({
+        id: adminId.value,
+      });
 
-      expect(result).toHaveLength(admins.length);
-      result.map((item) => expect(item.disabled).toBeTruthy());
+      mockAdminEntity.disabled = false;
+      expect(repositoryMock.save).toHaveBeenCalledWith(mockAdminEntity);
     });
   });
 });
