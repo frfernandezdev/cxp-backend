@@ -1,24 +1,24 @@
 import { Test } from '@nestjs/testing';
-import { Connection } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { BackofficeSQLiteModule } from '../BackofficeSQLiteModule';
 
 describe('BackofficeSQLiteModule', () => {
-  let factory: Connection;
+  let factory: DataSource;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [BackofficeSQLiteModule],
     }).compile();
 
-    factory = moduleRef.get<Connection>(Connection);
+    factory = moduleRef.get<DataSource>(DataSource);
   });
 
   afterEach(async () => {
-    await factory.close();
+    await factory.destroy();
   });
 
   it('should verify connection if already established', () => {
-    expect(factory).toBeInstanceOf(Connection);
-    expect(factory.isConnected).toBeTruthy();
+    expect(factory).toBeInstanceOf(DataSource);
+    expect(factory.isInitialized).toBeTruthy();
   });
 });
