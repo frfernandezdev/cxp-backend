@@ -8,17 +8,17 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint \"src/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "jest --config ./e2e/jest-e2e.json",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -28,7 +28,7 @@
     "@nestjs/cqrs": "^8.0.4",
     "@nestjs/platform-express": "^8.4.6",
     "@nestjs/swagger": "^5.2.1",
-    "@nestjs/typeorm": "^8.1.2",
+    "@nestjs/typeorm": "^8.1.4",
     "@types/compression": "^1.7.2",
     "@types/convict": "^6.1.1",
     "@types/uuid": "^8.3.4",
@@ -43,7 +43,7 @@
     "rxjs": "^7.5.5",
     "sqlite3": "^5.0.8",
     "swagger-ui-express": "^4.4.0",
-    "typeorm": "^0.3.6",
+    "typeorm": "^0.3.7",
     "uuid": "^8.3.2",
     "uuid-validate": "^0.0.3",
     "winston": "^3.7.2"
@@ -56,13 +56,14 @@
     "@nestjs/schematics": "^8.0.11",
     "@nestjs/testing": "^8.4.6",
     "@types/express": "^4.17.13",
-    "@types/jest": "28.1.1",
+    "@types/jest": "^28.1.1",
     "@types/node": "^17.0.41",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-jest": "^26.1.5",
     "eslint-plugin-prettier": "^4.0.0",
     "husky": "^8.0.1",
     "jest": "^28.1.1",
@@ -82,7 +83,7 @@
       "json",
       "ts"
     ],
-    "testRegex": ".*\\.spec\\.ts$",
+    "testRegex": ".*\\.(spec|test)\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
