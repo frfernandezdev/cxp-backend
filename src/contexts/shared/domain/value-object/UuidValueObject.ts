@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import validate from 'uuid-validate';
+import * as validate from 'uuid-validate';
 import { InvalidArgumentError } from './InvalidArgumentError';
 
 export class UuidValueObject {
