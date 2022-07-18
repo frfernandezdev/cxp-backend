@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BackofficeSQLiteModule } from 'src/contexts/backoffice/shared/infrastructure/persistence/__mocks__/BackofficeSQLiteModule';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { Criteria } from 'src/contexts/shared/domain/criteria/Criteria';
 import { Filter } from 'src/contexts/shared/domain/criteria/Filter';
 import { FilterField } from 'src/contexts/shared/domain/criteria/FilterField';
@@ -9,15 +9,18 @@ import {
 } from 'src/contexts/shared/domain/criteria/FilterOperator';
 import { Filters } from 'src/contexts/shared/domain/criteria/Filters';
 import { FilterValue } from 'src/contexts/shared/domain/criteria/FilterValue';
-import { PlanEntity } from 'src/contexts/shared/infrastructure/entities/PlanEntity';
-import { Connection } from 'typeorm';
+import { MockType } from 'src/contexts/shared/domain/MockType';
+import { SQLiteCriteriaConverter } from 'src/contexts/shared/infrastructure/sqlite/SQLiteCriteriaConverter';
+import { Repository } from 'typeorm';
 import { BackofficePlan } from '../../../domain/BackofficePlan';
 import { BackofficePlanId } from '../../../domain/BackofficePlanId';
+import { BackofficePlanIdFixture } from '../../../domain/__fixtures__/BackofficePlanIdFixture';
 import { BackofficePlanCoinFixture } from '../../../domain/__fixtures__/BackofficePlanCoinFixture';
 import { BackofficePlanDurationFixture } from '../../../domain/__fixtures__/BackofficePlanDurationFixture';
-import { BackofficePlanIdFixture } from '../../../domain/__fixtures__/BackofficePlanIdFixture';
 import { BackofficePlanPriceFixture } from '../../../domain/__fixtures__/BackofficePlanPriceFixture';
 import { BackofficeSQLitePlanRepository } from '../BackofficeSQLitePlanRepository';
+import { PlanRepository } from '../__mocks__/PlanRepository';
+import { PlanEntity } from 'src/contexts/shared/infrastructure/entities/PlanEntity';
 
 jest.mock(
   'src/contexts/backoffice/shared/infrastructure/persistence/BackofficeSQLiteModule',
@@ -31,225 +34,197 @@ const backofficePlanMock = () =>
     BackofficePlanCoinFixture.random(),
   );
 
-describe('BackofficeSQLiteMethodRepository', () => {
-  let database: Connection;
+const makePlanEntity = (plan: BackofficePlan): PlanEntity => {
+  const entity = new PlanEntity();
+  const raw = plan.toPrimitives();
+
+  entity.id = raw.id;
+  entity.price = raw.price;
+  entity.duration = raw.duration;
+  entity.coin = raw.coin;
+
+  return entity;
+};
+
+describe('BackofficeSQLitePlanRepository', () => {
   let repository: BackofficeSQLitePlanRepository;
+  let repositoryMock: MockType<Repository<PlanEntity>>;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      imports: [BackofficeSQLiteModule],
-      providers: [BackofficeSQLitePlanRepository],
+      providers: [
+        BackofficeSQLitePlanRepository,
+        {
+          provide: getRepositoryToken(PlanEntity),
+          useFactory: PlanRepository,
+        },
+      ],
     }).compile();
 
-    database = moduleRef.get<Connection>(Connection);
     repository = moduleRef.get<BackofficeSQLitePlanRepository>(
       BackofficeSQLitePlanRepository,
     );
-  });
-
-  afterEach(async () => {
-    await database.close();
+    repositoryMock = moduleRef.get(getRepositoryToken(PlanEntity));
   });
 
   describe('#save', () => {
-    it('should create a new method', async () => {
-      const method = backofficePlanMock();
-      const raw = method.toPrimitives();
+    it('should call to method save', async () => {
+      const mockPlan = backofficePlanMock();
+      const mockPlanEntity = makePlanEntity(mockPlan);
 
-      await repository.save(method);
-
-      const entity = await database.manager.findOne(PlanEntity, {
-        id: raw.id,
-      });
-
-      expect(entity).not.toBeUndefined();
-      expect(raw).toMatchObject({
-        id: entity.id,
-        price: entity.price,
-        duration: entity.duration,
-        coin: entity.coin,
-      });
+      repositoryMock.save.mockReturnValue(mockPlanEntity);
+      await expect(repository.save(mockPlan)).resolves.toBeUndefined();
+      expect(repositoryMock.save).toHaveBeenCalledWith(mockPlanEntity);
     });
   });
 
   describe('#findById', () => {
-    let plan: PlanEntity;
+    it('should call to method findById', async () => {
+      const mockPlan = backofficePlanMock();
+      const mockPlanEntity = makePlanEntity(mockPlan);
+      const raw = mockPlan.toPrimitives();
+      const planId = new BackofficePlanId(raw.id);
 
-    beforeEach(async () => {
-      plan = new PlanEntity();
-      const { id, price, duration, coin } = backofficePlanMock().toPrimitives();
-
-      plan.id = id;
-      plan.price = price;
-      plan.duration = duration;
-      plan.coin = coin;
-
-      await database.manager.save(PlanEntity, plan);
-    });
-
-    it('should find a plan by id', async () => {
-      const result = await repository.findById(new BackofficePlanId(plan.id));
-      const raw = result.toPrimitives();
-
-      expect(plan).not.toBeUndefined();
-      expect(raw).toMatchObject({
-        id: plan.id,
-        price: plan.price,
-        duration: plan.duration,
-        coin: plan.coin,
+      repositoryMock.findOneBy.mockReturnValue(mockPlanEntity);
+      await expect(repository.findById(planId)).resolves.toEqual(mockPlan);
+      expect(repositoryMock.findOneBy).toHaveBeenCalledWith({
+        id: planId.value,
       });
     });
   });
 
   describe('#findOne', () => {
-    let plan: PlanEntity;
+    it('should call to method findOne', async () => {
+      const mockPlan = backofficePlanMock();
+      const mockPlanEntity = makePlanEntity(mockPlan);
+      const raw = mockPlan.toPrimitives();
 
-    beforeEach(async () => {
-      plan = new PlanEntity();
-      const { id, price, duration, coin } = backofficePlanMock().toPrimitives();
-
-      plan.id = id;
-      plan.price = price;
-      plan.duration = duration;
-      plan.coin = coin;
-
-      await database.manager.save(PlanEntity, plan);
-    });
-
-    it('should find a plan by criteria', async () => {
       const filter = new Filter(
         new FilterField('price'),
         FilterOperator.fromValue(Operator.EQUAL),
-        new FilterValue(`${plan.price}`),
+        new FilterValue(String(raw.price)),
       );
       const filters = new Filters([filter]);
       const criteria = new Criteria(filters);
-      const result = await repository.findOne(criteria);
-      const raw = result.toPrimitives();
 
-      expect(result).not.toBeUndefined();
-      expect(raw).toMatchObject({
-        id: plan.id,
-        price: plan.price,
-        duration: plan.duration,
-        coin: plan.coin,
-      });
+      repositoryMock.findOne.mockReturnValue(mockPlanEntity);
+      await expect(repository.findOne(criteria)).resolves.toEqual(mockPlan);
+
+      const criteriaConverter = new SQLiteCriteriaConverter();
+      expect(repositoryMock.findOne).toHaveBeenCalledWith(
+        criteriaConverter.convert(criteria),
+      );
     });
   });
 
-  describe('#findALl', () => {
-    const plans: PlanEntity[] = [];
+  describe('#findAll', () => {
+    let mockPlanEntities: PlanEntity[];
+    const mockPlans: BackofficePlan[] = [];
 
-    beforeEach(async () => {
-      for (let i = 0; i < 3; i++) {
-        const item = (plans[i] = new PlanEntity());
-        const { id, price, duration, coin } =
-          backofficePlanMock().toPrimitives();
+    beforeEach(() => {
+      function load() {
+        const mockPlan = backofficePlanMock();
 
-        item.id = id;
-        item.price = price;
-        item.duration = duration;
-        item.coin = coin;
+        mockPlans.push(mockPlan);
 
-        await database.manager.save(PlanEntity, item);
+        return makePlanEntity(mockPlan);
       }
+
+      const emptyArray = Array.from({ length: 3 });
+      mockPlanEntities = emptyArray.map(load);
     });
 
-    it('should find all plan', async () => {
-      const result = await repository.findAll();
+    it('should call to method findAll', async () => {
+      repositoryMock.find.mockReturnValue(mockPlanEntities);
+      const criteria = new Criteria();
+      await expect(repository.findAll(criteria)).resolves.toEqual(mockPlans);
 
-      expect(result).toHaveLength(plans.length);
+      const criteriaConverter = new SQLiteCriteriaConverter();
+      expect(repositoryMock.find).toHaveBeenCalledWith(
+        criteriaConverter.convert(criteria),
+      );
     });
   });
 
   describe('#delete', () => {
-    let plan: PlanEntity;
+    it('should call to method delete', async () => {
+      const mockPlan = backofficePlanMock();
+      const raw = mockPlan.toPrimitives();
+      const planId = new BackofficePlanId(raw.id);
 
-    beforeEach(async () => {
-      plan = new PlanEntity();
-      const { id, price, duration, coin } = backofficePlanMock().toPrimitives();
-
-      plan.id = id;
-      plan.price = price;
-      plan.duration = duration;
-      plan.coin = coin;
-
-      await database.manager.save(PlanEntity, plan);
-    });
-
-    it('should delete a admin', async () => {
-      await repository.delete(plan.id);
-
-      const result = await database.manager.findOne(PlanEntity, {
-        id: plan.id,
-      });
-
-      expect(result).toBeUndefined();
+      await expect(repository.delete(planId)).resolves.toBeUndefined();
+      expect(repositoryMock.delete).toHaveBeenCalledWith({ id: planId.value });
     });
   });
 
   describe('#remove', () => {
-    const plans: PlanEntity[] = [];
+    let mockPlanEntities: PlanEntity[];
+    const mockPlans: BackofficePlan[] = [];
 
-    beforeEach(async () => {
-      for (let i = 0; i < 3; i++) {
-        const item = (plans[i] = new PlanEntity());
-        const { id, price, duration, coin } =
-          backofficePlanMock().toPrimitives();
+    beforeEach(() => {
+      function load() {
+        const mockPlan = backofficePlanMock();
 
-        item.id = id;
-        item.price = price;
-        item.duration = duration;
-        item.coin = coin;
+        mockPlans.push(mockPlan);
 
-        await database.manager.save(PlanEntity, item);
+        return makePlanEntity(mockPlan);
       }
+
+      const emptyArray = Array.from({ length: 3 });
+      mockPlanEntities = emptyArray.map(load);
     });
 
-    it('should remove plan', async () => {
-      const ids = plans.map((item) => item.id);
-      await repository.remove(ids);
-
-      const results = await database.manager.findByIds(
-        PlanEntity,
-        plans.map((item) => item.id),
+    it('should call to method remove', async () => {
+      const plansId = mockPlans.map(
+        (item) => new BackofficePlanId(item.toPrimitives().id),
       );
 
-      expect(results).toHaveLength(0);
-      results.map((item) => expect(plans).not.toContain(item));
+      repositoryMock.findBy.mockReturnValue(mockPlanEntities);
+      await expect(repository.remove(plansId)).resolves.toBeUndefined();
+
+      expect(repositoryMock.findBy).toHaveBeenCalledWith(
+        plansId.map(({ value }) => ({ id: value })),
+      );
+
+      expect(repositoryMock.remove).toHaveBeenCalledWith(mockPlanEntities);
     });
   });
 
-  describe('#disabled', () => {
-    const plans: PlanEntity[] = [];
+  describe('disabled', () => {
+    it('should call to method disabled', async () => {
+      const mockPlan = backofficePlanMock();
+      const mockPlanEntity = makePlanEntity(mockPlan);
+      const raw = mockPlan.toPrimitives();
+      const planId = new BackofficePlanId(raw.id);
 
-    beforeEach(async () => {
-      for (let i = 0; i < 3; i++) {
-        const item = (plans[i] = new PlanEntity());
-        const { id, price, duration, coin } =
-          backofficePlanMock().toPrimitives();
+      repositoryMock.findOneBy.mockReturnValue(mockPlanEntity);
+      await expect(repository.disabled(planId)).resolves.toBeUndefined();
 
-        item.id = id;
-        item.price = price;
-        item.duration = duration;
-        item.coin = coin;
+      expect(repositoryMock.findOneBy).toHaveBeenCalledWith({
+        id: planId.value,
+      });
 
-        await database.manager.save(PlanEntity, item);
-      }
+      mockPlanEntity.disabled = true;
+      expect(repositoryMock.save).toHaveBeenCalledWith(mockPlanEntity);
     });
+  });
 
-    it('should disabled plan', async () => {
-      const ids = plans.map((item) => item.id);
+  describe('enabled', () => {
+    it('should call to method enabled', async () => {
+      const mockPlan = backofficePlanMock();
+      const mockPlanEntity = makePlanEntity(mockPlan);
+      const raw = mockPlan.toPrimitives();
+      const planId = new BackofficePlanId(raw.id);
 
-      await repository.disabled(ids);
+      repositoryMock.findOneBy.mockReturnValue(mockPlanEntity);
+      await expect(repository.disabled(planId)).resolves.toBeUndefined();
 
-      const result = await database.manager.findByIds(
-        PlanEntity,
-        plans.map((item) => item.id),
-      );
+      expect(repositoryMock.findOneBy).toHaveBeenCalledWith({
+        id: planId.value,
+      });
 
-      expect(result).toHaveLength(plans.length);
-      result.map((item) => expect(item.disabled).toBeTruthy());
+      mockPlanEntity.disabled = false;
+      expect(repositoryMock.save).toHaveBeenCalledWith(mockPlanEntity);
     });
   });
 });
