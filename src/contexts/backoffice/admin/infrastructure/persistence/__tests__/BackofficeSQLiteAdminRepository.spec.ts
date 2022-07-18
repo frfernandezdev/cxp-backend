@@ -64,7 +64,6 @@ describe('BackofficeSQLiteAdminRepository', () => {
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      //imports: [BackofficeSQLiteModule],
       providers: [
         BackofficeSQLiteAdminRepository,
         {
@@ -160,7 +159,7 @@ describe('BackofficeSQLiteAdminRepository', () => {
   });
 
   describe('#delete', () => {
-    it('should delete a admin', async () => {
+    it('should call to method delete', async () => {
       const mockAdmin = backofficeAdminMock();
       const raw = mockAdmin.toPrimitives();
       const adminId = new BackofficeAdminId(raw.id);
@@ -187,24 +186,24 @@ describe('BackofficeSQLiteAdminRepository', () => {
       mockAdminEntities = emptyArray.map(load);
     });
 
-    it('should remove admins', async () => {
+    it('should call to method remove', async () => {
       const adminsId = mockAdmins.map(
         (item) => new BackofficeAdminId(item.toPrimitives().id),
       );
 
-      repositoryMock.find.mockReturnValue(mockAdminEntities);
+      repositoryMock.findBy.mockReturnValue(mockAdminEntities);
       await expect(repository.remove(adminsId)).resolves.toBeUndefined();
 
-      expect(repositoryMock.find).toHaveBeenCalledWith({
-        where: adminsId.map(({ value }) => ({ id: value })),
-      });
+      expect(repositoryMock.findBy).toHaveBeenCalledWith(
+        adminsId.map(({ value }) => ({ id: value })),
+      );
 
       expect(repositoryMock.remove).toHaveBeenCalledWith(mockAdminEntities);
     });
   });
 
   describe('disabled', () => {
-    it('should disabled a admin', async () => {
+    it('should call to method disabled', async () => {
       const mockAdmin = backofficeAdminMock();
       const mockAdminEntity = makeAdminEntity(mockAdmin);
       const raw = mockAdmin.toPrimitives();
@@ -223,7 +222,7 @@ describe('BackofficeSQLiteAdminRepository', () => {
   });
 
   describe('enabled', () => {
-    it('should enabled a admin', async () => {
+    it('should call to method enabled', async () => {
       const mockAdmin = backofficeAdminMock();
       const mockAdminEntity = makeAdminEntity(mockAdmin);
       const raw = mockAdmin.toPrimitives();
