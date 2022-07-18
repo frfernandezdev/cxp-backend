@@ -7,6 +7,6 @@ export class BackofficeAdminPhoneNumberFixture {
   }
 
   static random(): BackofficeAdminPhoneNumber {
-    return this.create(faker.phone.phoneNumber('+584#########'));
+    return this.create(faker.phone.number('+584#########'));
   }
 }
