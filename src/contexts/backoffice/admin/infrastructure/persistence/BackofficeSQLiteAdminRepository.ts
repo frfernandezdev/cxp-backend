@@ -116,9 +116,9 @@ export class BackofficeSQLiteAdminRepository {
   }
 
   async remove(adminsId: BackofficeAdminId[]): Promise<void> {
-    const entities = await this.repository.find({
-      where: adminsId.map(({ value }) => ({ id: value })),
-    });
+    const entities = await this.repository.findBy(
+      adminsId.map(({ value }) => ({ id: value })),
+    );
     await this.repository.remove(entities);
   }
 
